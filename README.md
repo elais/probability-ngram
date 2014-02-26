@@ -12,7 +12,7 @@ The goal of this assignment is to give you some experience implementing a probab
 
 1.  Compile the code. Run the following command:
 
-        mvn compile
+        mvn clean compile
 
     Everything should compile and you should see a message like:
 
@@ -22,7 +22,7 @@ The goal of this assignment is to give you some experience implementing a probab
 
 2.  Test the code. Run the following command:
 
-        mvn test
+        mvn clean test
 
     The tests should fail, and you should see a message like:
 
@@ -37,6 +37,8 @@ The goal of this assignment is to give you some experience implementing a probab
         [INFO] BUILD FAILURE
         [INFO] ------------------------------------------------------------------------
 
+    Note the `clean`, which ensures that Maven alone (not your development environment) is compiling your code.
+
 ## Implement your part of the code
 
 Your task is to implement the methods marked `TODO` in the class `edu.uab.cis.probability.ngram.NgramLanguageModel`:
@@ -44,8 +46,8 @@ Your task is to implement the methods marked `TODO` in the class `edu.uab.cis.pr
 *   `probability(List<T>)`: Return the estimated n-gram probability of the sequence, calculated as P(w<sub>0</sub>,...,w<sub>k</sub>) = ∏<sub>i=0,...,k</sub> P(w<sub>i</sub>|w<sub>i-n+1</sub>, w<sub>i-n+2</sub>, ..., w<sub>i-1</sub>).
     For example, a 3-gram language model would calculate the probability of the sequence `[A,B,B,C,A]` as `P(A,B,B,C,A) = P(A)*P(B|A)*P(B|A,B)*P(C|B,B)*P(A|B,C)`.
     The exact calculation of the conditional probabilities in this expression depends on the smoothing method:
-    *   If the smoothing method is `NONE`, then an n-gram w<sub>1</sub>,...,w<sub>n</sub> will have its joint probability P(w<sub>1</sub>,...,w<sub>n</sub>) estimated as `#(w<sub>1</sub>,...,w<sub>n</sub>) / N`, where `N` indicates the total number of all 1-grams observed during training. Note that we have defined only the joint probability of an n-gram here. You will have to derive the conditional probability from this definition and your knowledge of probability theory.
-    *   If the smoothing method is `LAPLACE`, then an n-gram w<sub>1</sub>,...,w<sub>n</sub> will have its conditional probability P(w<sub>n</sub>|w<sub>1</sub>,...,w<sub>n-1</sub>) estimated as `(1 + #(w<sub>1</sub>,...,w<sub>n</sub>)) / (V + #(w<sub>1</sub>,...,w<sub>n-1</sub>))`, where `#` indicates the number of times an n-gram was observed during training and `V` indicates the number of *unique* 1-grams observed during training. Note that Laplace smoothing directly defines the conditional probability of an n-gram.
+    *   If the smoothing method is `NONE`, then an n-gram w<sub>1</sub>,...,w<sub>n</sub> will have its joint probability P(w<sub>1</sub>,...,w<sub>n</sub>) estimated as #(w<sub>1</sub>,...,w<sub>n</sub>) / N, where N indicates the total number of all 1-grams observed during training. Note that we have defined only the joint probability of an n-gram here. You will have to derive the conditional probability from this definition and your knowledge of probability theory.
+    *   If the smoothing method is `LAPLACE`, then an n-gram w<sub>1</sub>,...,w<sub>n</sub> will have its conditional probability P(w<sub>n</sub>|w<sub>1</sub>,...,w<sub>n-1</sub>) estimated as (1 + #(w<sub>1</sub>,...,w<sub>n</sub>)) / (V + #(w<sub>1</sub>,...,w<sub>n-1</sub>)), where # indicates the number of times an n-gram was observed during training and V indicates the number of *unique* 1-grams observed during training. Note that Laplace smoothing directly defines the conditional probability of an n-gram.
 
    The calculation also depends on the representation selected:
    *    If the representation is `PROBABILITY`, then you should calculate probabilities as normal, resulting in numbers in the range `[0,1]`.
