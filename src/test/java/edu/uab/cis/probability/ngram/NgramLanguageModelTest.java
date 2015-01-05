@@ -12,7 +12,7 @@ import edu.uab.cis.probability.ngram.NgramLanguageModel.Smoothing;
 
 public class NgramLanguageModelTest {
 
-  @Test
+  @Test(timeout = 10000)
   public void testCharacter2gram() {
     NgramLanguageModel<Character> model =
         new NgramLanguageModel<>(2, Representation.PROBABILITY, Smoothing.NONE);
@@ -21,7 +21,7 @@ public class NgramLanguageModelTest {
         * (1.0 / 3.0), model.probability(charactersOf("aaaabb")), 1e-10);
   }
 
-  @Test
+  @Test(timeout = 10000)
   public void testCharacter2gramLaplace() {
     NgramLanguageModel<Character> model =
         new NgramLanguageModel<>(2, Representation.PROBABILITY, Smoothing.LAPLACE);
@@ -30,7 +30,7 @@ public class NgramLanguageModelTest {
         * (2.0 / 5.0), model.probability(charactersOf("aaaabb")), 1e-10);
   }
 
-  @Test
+  @Test(timeout = 10000)
   public void testInteger4gramLogprobLaplace() {
     NgramLanguageModel<Integer> model =
         new NgramLanguageModel<>(4, Representation.LOG_PROBABILITY, Smoothing.LAPLACE);
