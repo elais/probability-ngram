@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -89,14 +91,23 @@ public class NgramLanguageModel<T> {
    * @param sequence
    *          The sequence on which the model should be trained.
    */
+  private Map<String, Double> ngrams;
   public void train(List<T> sequence) {
     // TODO
-    String[] s = sequence.toArray(new String[sequence.size()]);
+    String s = sequence.toArray(new String[sequence.size()]).toString();
     List<String> ngram_list = createNgrams(this.ngram_size, s);
-    Map<String, Double> ngrams = new HashMap<String, Double>();
+    this.ngrams = new HashMap<String, Double>();
     for(String ngram : ngram_list)
-      ngrams.putIfAbsent(ngram, 0.0);
-    for
+      this.ngrams.putIfAbsent(ngram, 0.0);
+    for(String key : this.ngrams.keySet()){
+      Pattern p = Pattern.compile(key);
+      Matcher m = p.matcher(s);
+      while(m.find()){
+        this.ngrams.put(key, this.ngrams.get(key) + 1.0);
+      }
+      this.ngrams.put(key, (Double)this.ngrams.get(key)/s.length());
+    }
+    
 
 
 
@@ -129,10 +140,11 @@ public class NgramLanguageModel<T> {
   }
   
 
-  public List<String> createNgrams(int n, String[] s){
+  public List<String> createNgrams(int n, String str){
     List<String> ngrams = new ArrayList<String>();
-    for (int i = 0; i < s.length - n + 1; i++)
-      ngrams.add(concat(s, i, i+n));
+    String[] words = str.split("");
+    for (int i = 0; i < words.length - n + 1; i++)
+      ngrams.add(concat(words, i, i+n));
     return ngrams;
   }
   
