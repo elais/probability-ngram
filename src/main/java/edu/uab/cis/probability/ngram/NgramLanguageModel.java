@@ -79,6 +79,7 @@ public class NgramLanguageModel<T> {
   private int ngram_size;
   private Representation representation;
   private Smoothing smoothing;
+  private int training_size;
   public NgramLanguageModel(int n, Representation representation, Smoothing smoothing) {
     // TODO
     this.ngram_size = n;
@@ -97,32 +98,35 @@ public class NgramLanguageModel<T> {
    */
   private Map<String, Double> ngrams;
   private Map<String, Double> ngram_prob;
+  private Set uniqueNgrams;
   private List<String> ngram_list;
   public void train(List<T> sequence) {
     String s = sequence.stream().map(Object::toString)
                         .collect(Collectors.joining(", ")).replaceAll(", ", "");
-    
-    //System.out.println(s);
+    training_size = sequence.size();
+    uniqueNgrams = new HashSet(sequence);
+    System.out.println(s);
     this.ngram_list = new ArrayList<String>();
     for(int n = 1; n <= this.ngram_size; n++){
       for(String ngram : createNgrams(n, s))
         ngram_list.add(ngram);
     }
     this.ngrams = new HashMap<String, Double>();
-    
+
     for(String ngram : ngram_list){
       this.ngrams.put(ngram, 0.0);
     }
+    System.out.println(ngram_list);
     for(String ngram: ngram_list)
       this.ngrams.put(ngram, this.ngrams.get(ngram) + 1.0);
-    
+
     this.ngram_prob = new HashMap<String, Double>();
     Iterator<String> keySetIterator = this.ngrams.keySet().iterator();
     while(keySetIterator.hasNext()){
       String key = keySetIterator.next();
       this.ngram_prob.put(key, this.ngrams.get(key)/sequence.size());
     }
-    
+
 
 
 
@@ -161,18 +165,22 @@ public class NgramLanguageModel<T> {
       } else{
         sub = s.substring(i - this.ngram_size + 1, i+1);
       }
+      System.out.println(1 + this.ngrams.getOrDefault(sub, 0.0));
       if(this.smoothing == smoothing.NONE){
-        if(i == 0)
-          conditionals.add(noSmoothing(s.substring(i, i+1), sub.substring(0, sub.length()) ));
+        if(i == 0){
+          conditionals.add(this.ngram_prob.get(sub));
+        }
         else{
-          conditionals.add(noSmoothing(s.substring(i, i+1), sub.substring(0, sub.length()-1) ));
+          conditionals.add(noSmoothing(sub, sub.substring(0, sub.length()-1) ));
         }
       }
       else
         if(i == 0)
-          conditionals.add(laplaceSmoothing(sub, sub.substring(0, sub.length()), sequence));
+          conditionals.add((1 + this.ngrams.getOrDefault(sub, 0.0))/
+                           ((double)this.uniqueNgrams.size() +
+                            this.training_size));
         else
-          conditionals.add(laplaceSmoothing(sub, sub.substring(0, sub.length()), sequence));
+          conditionals.add(laplaceSmoothing(sub, sub.substring(0, sub.length()-1), sequence));
 
     }
     System.out.println(conditionals);
@@ -190,32 +198,31 @@ public class NgramLanguageModel<T> {
       return logstuff;
     }
   }
-  
+
 
   public List<String> createNgrams(int n, String str){
     List<String> ngrams = new ArrayList<String>();
     String[] words = str.split("");
-    for (int i = 1; i < words.length - n + 1; i++)
+    System.out.println(words);
+    for (int i = 0; i < words.length - n + 1; i++)
       ngrams.add(concat(words, i, i+n));
     return ngrams;
   }
-  
+
   public static String concat(String[] words, int start, int end){
     StringBuilder sb = new StringBuilder();
     for(int i = start; i < end; i++)
       sb.append((i > start ? "" : "") + words[i]);
     return sb.toString();
   }
-  
+
   public double noSmoothing(String a, String b){
-    return ((this.ngram_prob.get(a) * this.ngram_prob.get(b))/this.ngram_prob.get(b));
+    return (this.ngram_prob.get(a)/this.ngram_prob.get(b));
   }
-  
-  private Set uniqueNgrams;
+
   public double laplaceSmoothing(String a, String b, List<T> V){
-    uniqueNgrams = new HashSet(V);
     return ((1.0 + this.ngrams.getOrDefault(a, 0.0))/
             ((double)uniqueNgrams.size() + this.ngrams.getOrDefault(b, 0.0)));
   }
- 
+
 }
