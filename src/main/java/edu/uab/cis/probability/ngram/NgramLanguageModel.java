@@ -1,12 +1,10 @@
 package edu.uab.cis.probability.ngram;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.HashMap;
 import java.util.List;
-import java.lang.Math;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 /**
@@ -133,13 +131,16 @@ public class NgramLanguageModel<T> {
    *          The sequence of items whose probability is to be estimated.
    * @return The estimated probability of the sequence.
    */
+  private List sub;
+  private List<Double> conditionals;
+  private double product;
   public double probability(List<T> sequence) {
     // TODO
-
-    List<T> sub = new ArrayList<T>();
-    List<Double> conditionals = new ArrayList<Double>();
+    sub = new ArrayList<T>();
+    conditionals = new ArrayList<Double>(sequence.size());
+    System.out.println(sequence);
     for(int i = 0; i < sequence.size(); i++){
-      if(i < this.ngram_size){
+      if(i < ngram_size){
         sub = sequence.subList(0,i + 1);
       } else{
         sub = sequence.subList(i - this.ngram_size + 1, i+1);
@@ -147,7 +148,7 @@ public class NgramLanguageModel<T> {
       if(this.smoothing == smoothing.NONE){
         if(i == 0){
           //System.out.println(ngram_prob.get(sub));
-          conditionals.add(this.ngram_prob.getOrDefault(sub.toString(),0.0));
+          conditionals.add(ngram_prob.getOrDefault(sub.toString(),0.0));
         }
         else{
           conditionals.add(noSmoothing(sub.toString(), sub.subList(0, sub.size()-1).toString()));
@@ -155,38 +156,39 @@ public class NgramLanguageModel<T> {
       }
       else
         if(i == 0)
-          conditionals.add((1 + this.ngrams.getOrDefault(sub.toString(), 0.0))/
-                           ((double)this.uniqueNgrams.size() +
-                            this.training_size));
+          conditionals.add((1 + ngrams.getOrDefault(sub.toString(), 0.0))/
+                           ((double)uniqueNgrams.size() +
+                            training_size));
         else
           conditionals.add(laplaceSmoothing(sub.toString(), sub.subList(0, sub.size()-1).toString(), sequence));
 
     }
     
     if(this.representation == representation.PROBABILITY){
-      double product = 1.0;
+      product = 1.0;
       for(double n : conditionals)
         product *= n;
       return product;
     }
     else{
-      double logstuff = 0.0;
+      product = 0.0;
       for(double n : conditionals)
-        logstuff += Math.log(n);
-      return logstuff;
+        product += Math.log(n);
+      return product;
     }
   }
 
-
-  public static <T> List createNgrams(int n, List<T> s){
-    List ngrams = new ArrayList<List>();
+  private List ng;
+  public List createNgrams(int n, List<T> s){
+    ng = new ArrayList<List>();
     for(int i = 0; i < s.size() - n + 1; i++)
-      ngrams.add(concat(s, i, i + n));
-    return ngrams;
+      ng.add(concat(s, i, i + n));
+    return ng;
   }
   
-  public static <T> List concat(List<T> words, int start, int end){
-    List<T> sb = new ArrayList();
+  private List sb;
+  public List concat(List<T> words, int start, int end){
+    sb = new ArrayList();
     for(int i = start; i < end; i++)
       sb.add(words.get(i));
     return sb;
@@ -194,13 +196,13 @@ public class NgramLanguageModel<T> {
   
 
   public double noSmoothing(String a, String b){
-    return (this.ngram_prob.getOrDefault(a,0.0)/
-            this.ngram_prob.getOrDefault(b,0.0));
+    return (ngram_prob.getOrDefault(a,0.0)/
+            ngram_prob.getOrDefault(b,0.0));
   }
 
   public double laplaceSmoothing(String a, String b, List<T> V){
-    return ((1.0 + this.ngrams.getOrDefault(a, 0.0))/
-            ((double)uniqueNgrams.size() + this.ngrams.getOrDefault(b, 0.0)));
+    return ((1.0 + ngrams.getOrDefault(a, 0.0))/
+            ((double)uniqueNgrams.size() + ngrams.getOrDefault(b, 0.0)));
   }
 
 }
