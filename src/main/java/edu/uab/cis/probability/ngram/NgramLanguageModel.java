@@ -142,11 +142,10 @@ public class NgramLanguageModel<T> {
       conditionals.add(0.0);
     else{
       for(int i = 0; i < sequence.size(); i++){
-        if(i < ngram_size){
+        if(i < ngram_size)
           sub = sequence.subList(0,i + 1);
-        } else{
-          sub = sequence.subList(i - this.ngram_size + 1, i+1);
-        }
+        else
+          sub = sequence.subList(i - ngram_size + 1, i+1);
         if(this.smoothing == Smoothing.NONE){
           if(i == 0)
             conditionals.add(ngram_prob.getOrDefault(sub.hashCode(),0.0));
