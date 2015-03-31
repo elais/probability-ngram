@@ -75,7 +75,6 @@ public class NgramLanguageModelTest {
         (6.0 / 16.0) * (4.0 / 8.0) * (2.0 / 6.0) * (1.0 / 4.0) * (1.0 / 4.0),
         model.probability(charactersOf("abbca")), 1e-10);
   }
-
   @Test(timeout = 10000)
   public void testString4gramLaplace() {
     NgramLanguageModel<String> model =

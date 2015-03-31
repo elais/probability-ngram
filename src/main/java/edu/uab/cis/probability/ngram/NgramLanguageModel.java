@@ -70,9 +70,9 @@ public class NgramLanguageModel<T> {
    * @param smoothing
    *          The type of smoothing to apply when estimating probabilities.
    */
-  private int ngram_size;
-  private Representation representation;
-  private Smoothing smoothing;
+  private final int ngram_size;
+  private final Representation representation;
+  private final Smoothing smoothing;
   private int training_size;
   public NgramLanguageModel(int n, Representation representation, Smoothing smoothing) {
     // TODO
@@ -90,8 +90,8 @@ public class NgramLanguageModel<T> {
    * @param sequence
    *          The sequence on which the model should be trained.
    */
-  private Map<String, Double> ngrams;
-  private Map<String, Double> ngram_prob;
+  private Map<Integer, Double> ngrams;
+  private Map<Integer, Double> ngram_prob;
   private Set uniqueNgrams;
   private List ngram_list;
   public void train(List<T> sequence) {
@@ -99,14 +99,14 @@ public class NgramLanguageModel<T> {
 
     training_size = sequence.size();
     uniqueNgrams = new HashSet(sequence);
-    ngram_list = new ArrayList<List>();
-    ngrams = new HashMap<String, Double>();
-    ngram_prob = new HashMap<String, Double>();
+    ngram_list = new ArrayList<>();
+    ngrams = new HashMap<>();
+    ngram_prob = new HashMap<>();
     for(int n = 1; n <= ngram_size; n++)
       createNgrams(n, sequence).forEach(e -> ngram_list.add(e));
-    ngram_list.forEach(e -> ngrams.put(e.toString(),
+    ngram_list.forEach(e -> ngrams.put(e.hashCode(),
             (double)Collections.frequency(ngram_list, e)));
-    ngram_list.forEach(e -> ngram_prob.put(e.toString(),
+    ngram_list.forEach(e -> ngram_prob.put(e.hashCode(),
             (double)Collections.frequency(ngram_list, e)/training_size));
   }
 
@@ -136,51 +136,49 @@ public class NgramLanguageModel<T> {
   private double product;
   public double probability(List<T> sequence) {
     // TODO
-    sub = new ArrayList<T>();
-    conditionals = new ArrayList<Double>(sequence.size());
-    //System.out.println(sequence);
-    for(int i = 0; i < sequence.size(); i++){
-      if(i < ngram_size){
-        sub = sequence.subList(0,i + 1);
-      } else{
-        sub = sequence.subList(i - this.ngram_size + 1, i+1);
-      }
-      if(this.smoothing == smoothing.NONE){
-        if(i == 0){
-          //System.out.println(ngram_prob.get(sub));
-          conditionals.add(ngram_prob.getOrDefault(sub.toString(),0.0));
+    sub = new ArrayList<>();
+    conditionals = new ArrayList<>(sequence.size());
+    if(sequence.isEmpty())
+      conditionals.add(0.0);
+    else{
+      for(int i = 0; i < sequence.size(); i++){
+        if(i < ngram_size){
+          sub = sequence.subList(0,i + 1);
+        } else{
+          sub = sequence.subList(i - this.ngram_size + 1, i+1);
+        }
+        if(this.smoothing == Smoothing.NONE){
+          if(i == 0)
+            conditionals.add(ngram_prob.getOrDefault(sub.hashCode(),0.0));
+          else
+            conditionals.add(noSmoothing(sub.hashCode(), sub.subList(0, sub.size()-1).hashCode()));
         }
         else{
-          conditionals.add(noSmoothing(sub.toString(), sub.subList(0, sub.size()-1).toString()));
+          if(i == 0)
+            conditionals.add((1 + ngrams.getOrDefault(sub.hashCode(), 0.0))/
+                             ((double)uniqueNgrams.size() +
+                              training_size));
+          else
+            conditionals.add(laplaceSmoothing(sub.hashCode(), sub.subList(0, sub.size()-1).hashCode()));
         }
       }
-      else
-        if(i == 0)
-          conditionals.add((1 + ngrams.getOrDefault(sub.toString(), 0.0))/
-                           ((double)uniqueNgrams.size() +
-                            training_size));
-        else
-          conditionals.add(laplaceSmoothing(sub.toString(), sub.subList(0, sub.size()-1).toString(), sequence));
-
     }
-
-    if(this.representation == representation.PROBABILITY){
+    if(this.representation == Representation.PROBABILITY){
       product = 1.0;
-      for(double n : conditionals)
-        product *= n;
+      conditionals.stream().forEach((n) -> {product *= n;});
       return product;
     }
     else{
       product = 0.0;
-      for(double n : conditionals)
-        product += Math.log(n);
+      conditionals.stream().forEach((n) -> {product += Math.log(n); });
       return product;
     }
+    
   }
-
+  
   private List ng;
   public List createNgrams(int n, List<T> s){
-    ng = new ArrayList<List>();
+    ng = new ArrayList<>();
     for(int i = 0; i < s.size() - n + 1; i++)
       ng.add(concat(s, i, i + n));
     return ng;
@@ -195,12 +193,12 @@ public class NgramLanguageModel<T> {
   }
 
 
-  public double noSmoothing(String a, String b){
+  public double noSmoothing(int a, int b){
     return (ngram_prob.getOrDefault(a,0.0)/
-            ngram_prob.getOrDefault(b,1.0));
+            ngram_prob.getOrDefault(b,0.0));
   }
 
-  public double laplaceSmoothing(String a, String b, List<T> V){
+  public double laplaceSmoothing(int a, int b){
     return ((1.0 + ngrams.getOrDefault(a, 0.0))/
             ((double)uniqueNgrams.size() + ngrams.getOrDefault(b, 0.0)));
   }
