@@ -96,7 +96,7 @@ public class NgramLanguageModel<T> {
   private List ngram_list;
   public void train(List<T> sequence) {
     List<T> s = sequence;
-    
+
     training_size = sequence.size();
     uniqueNgrams = new HashSet(sequence);
     ngram_list = new ArrayList<List>();
@@ -104,10 +104,10 @@ public class NgramLanguageModel<T> {
     ngram_prob = new HashMap<String, Double>();
     for(int n = 1; n <= ngram_size; n++)
       createNgrams(n, sequence).forEach(e -> ngram_list.add(e));
-    ngram_list.forEach(e -> ngrams.put(e.toString(), 
+    ngram_list.forEach(e -> ngrams.put(e.toString(),
             (double)Collections.frequency(ngram_list, e)));
-    ngram_list.forEach(e -> ngram_prob.put(e.toString(), 
-            (double)Collections.frequency(ngram_list, e)/training_size));    
+    ngram_list.forEach(e -> ngram_prob.put(e.toString(),
+            (double)Collections.frequency(ngram_list, e)/training_size));
   }
 
   /**
@@ -138,7 +138,7 @@ public class NgramLanguageModel<T> {
     // TODO
     sub = new ArrayList<T>();
     conditionals = new ArrayList<Double>(sequence.size());
-    System.out.println(sequence);
+    //System.out.println(sequence);
     for(int i = 0; i < sequence.size(); i++){
       if(i < ngram_size){
         sub = sequence.subList(0,i + 1);
@@ -163,7 +163,7 @@ public class NgramLanguageModel<T> {
           conditionals.add(laplaceSmoothing(sub.toString(), sub.subList(0, sub.size()-1).toString(), sequence));
 
     }
-    
+
     if(this.representation == representation.PROBABILITY){
       product = 1.0;
       for(double n : conditionals)
@@ -185,7 +185,7 @@ public class NgramLanguageModel<T> {
       ng.add(concat(s, i, i + n));
     return ng;
   }
-  
+
   private List sb;
   public List concat(List<T> words, int start, int end){
     sb = new ArrayList();
@@ -193,11 +193,11 @@ public class NgramLanguageModel<T> {
       sb.add(words.get(i));
     return sb;
   }
-  
+
 
   public double noSmoothing(String a, String b){
     return (ngram_prob.getOrDefault(a,0.0)/
-            ngram_prob.getOrDefault(b,0.0));
+            ngram_prob.getOrDefault(b,1.0));
   }
 
   public double laplaceSmoothing(String a, String b, List<T> V){

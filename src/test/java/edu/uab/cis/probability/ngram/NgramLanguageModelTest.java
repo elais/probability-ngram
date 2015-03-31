@@ -75,13 +75,14 @@ public class NgramLanguageModelTest {
         (6.0 / 16.0) * (4.0 / 8.0) * (2.0 / 6.0) * (1.0 / 4.0) * (1.0 / 4.0),
         model.probability(charactersOf("abbca")), 1e-10);
   }
-//  @Test(timeout = 10000)
-//  public void testString4gramLaplace() {
-//    NgramLanguageModel<String> model =
-//        new NgramLanguageModel<>(4, Representation.PROBABILITY, Smoothing.LAPLACE);
-//    model.train(Arrays.asList("this", "is", "a", "sentence", "and", "my", "dog", "is", "named", "Newton", "he", "is", "a", "good", "dog", "jk"));
-//    Assert.assertEquals((2.0/28.0) * (2.0/13.0) * (2.0/13.0) * (2.0/13.0) * (1.0/13.0),
-//        model.probability(Arrays.asList("my dog is named Charlie")),
-//        1e-10);
-//  }
+
+  @Test(timeout = 10000)
+  public void testString4gramLaplace() {
+    NgramLanguageModel<String> model =
+        new NgramLanguageModel<>(4, Representation.PROBABILITY, Smoothing.LAPLACE);
+    model.train(Arrays.asList("this", "is", "a", "sentence", "and", "my", "dog", "is", "named", "Newton", "he", "is", "a", "good", "dog", "jk"));
+    Assert.assertEquals((2.0/28.0) * (2.0/13.0) * (2.0/13.0) * (2.0/13.0) * (1.0/13.0),
+        model.probability(Arrays.asList("my", "dog", "is", "named", "Charlie")),
+        1e-10);
+  }
 }
