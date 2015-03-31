@@ -41,4 +41,38 @@ public class NgramLanguageModelTest {
         model.probability(Arrays.asList(1, 0, 0, 0, 0, 0, 1)),
         1e-10);
   }
+
+  @Test(timeout = 10000)
+  public void testCharacterNotInTraining() {
+    NgramLanguageModel<Character> model =
+        new NgramLanguageModel<>(1, Representation.PROBABILITY, Smoothing.NONE);
+    model.train(charactersOf("abccabbacbaba"));
+    Assert.assertEquals(0, model.probability(charactersOf("d")), 1e-10);
+  }
+
+  @Test(timeout = 10000)
+  public void testCharacterNotInTrainingLaplace() {
+    NgramLanguageModel<Character> model =
+        new NgramLanguageModel<>(1, Representation.PROBABILITY, Smoothing.LAPLACE);
+    model.train(charactersOf("abccabbacbaba"));
+    Assert.assertEquals((1.0/16.0), model.probability(charactersOf("d")), 1e-10);
+  }
+
+  @Test(timeout = 10000)
+  public void testCharacter3gram() {
+    NgramLanguageModel<Character> model =
+        new NgramLanguageModel<>(3, Representation.PROBABILITY, Smoothing.NONE);
+    model.train(charactersOf("abccabbacbaba"));
+    Assert.assertEquals(0.0, model.probability(charactersOf("abbca")), 1e-10);
+  }
+
+  @Test(timeout = 10000)
+  public void testCharacter3gramLaplace() {
+    NgramLanguageModel<Character> model =
+        new NgramLanguageModel<>(3, Representation.PROBABILITY, Smoothing.LAPLACE);
+    model.train(charactersOf("abccabbacbaba"));
+    Assert.assertEquals(
+        (6.0 / 16.0) * (4.0 / 8.0) * (2.0 / 6.0) * (1.0 / 4.0) * (1.0 / 4.0),
+        model.probability(charactersOf("abbca")), 1e-10);
+  }
 }
